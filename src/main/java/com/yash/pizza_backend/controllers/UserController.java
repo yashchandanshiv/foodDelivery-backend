@@ -1,12 +1,14 @@
 package com.yash.pizza_backend.controllers;
 
+import com.yash.pizza_backend.Security.JwtUtil;
 import com.yash.pizza_backend.dto.LoginRequestDto;
 import com.yash.pizza_backend.entities.User;
 import com.yash.pizza_backend.repositories.UserRepository;
 import com.yash.pizza_backend.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +22,12 @@ public class UserController {
     UserService userService;
 
     @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @Autowired
     UserRepository userRepository;
 
     @PostMapping("/register")
@@ -28,17 +36,25 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequestDto request){
+    public ResponseEntity<?> login(@RequestBody LoginRequestDto request) {
 
-        User user = userService.login(request.getEmail(), request.getPassword());
-        if(user == null){
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body("Invalid email or password");
-        }
-        return ResponseEntity.ok(user);
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getEmail(),
+                        request.getPassword()
+                )
+        );
+
+        User user = userRepository
+                .findByEmail(request.getEmail())
+                .orElseThrow();
+
+        String token = jwtUtil.generateToken(user);
+
+        return ResponseEntity.ok(token);
     }
-    
+
+
     @GetMapping("/all")
     public List<User> all(){
         return userRepository.findAll();
