@@ -65,8 +65,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 }
 
             } catch (Exception e) {
-                // Token invalid, expired, malformed, etc.
-                System.out.println("JWT Invalid: " + e.getMessage());
+
             }
         }
 

@@ -3,6 +3,7 @@ package com.yash.pizza_backend.entities;
 import jakarta.persistence.*;
 
 @Entity
+@Table(name="users")
 public class User {
 
     @Id
