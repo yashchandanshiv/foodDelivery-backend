@@ -16,11 +16,9 @@ public class OrderController {
         this.orderService = orderService;
     }
 
-    @PostMapping
+    @PostMapping("/checkout")
     public ResponseEntity<Order> placeOrder(@RequestBody OrderRequestDto request) {
-
         Order savedOrder = orderService.placeOrder(request);
-
         return ResponseEntity.ok(savedOrder);
     }
 }

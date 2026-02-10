@@ -9,6 +9,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -34,28 +35,41 @@ public class JwtFilter extends OncePerRequestFilter {
         if (header != null && header.startsWith("Bearer ")) {
 
             String token = header.substring(7);
-            String email = jwtUtil.extractEmail(token);
 
-            if (email != null &&
-                    SecurityContextHolder.getContext().getAuthentication() == null) {
+            try {
+                String email = jwtUtil.extractEmail(token);
 
-                UserDetails userDetails =
-                        userDetailsService.loadUserByUsername(email);
+                if (email != null &&
+                        SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities()
+                    UserDetails userDetails =
+                            userDetailsService.loadUserByUsername(email);
+
+                    if (jwtUtil.validateToken(token, userDetails)) {
+
+                        UsernamePasswordAuthenticationToken authToken =
+                                new UsernamePasswordAuthenticationToken(
+                                        userDetails,
+                                        null,
+                                        userDetails.getAuthorities()
+                                );
+
+                        authToken.setDetails(
+                                new WebAuthenticationDetailsSource()
+                                        .buildDetails(request)
                         );
 
-                SecurityContextHolder.getContext()
-                        .setAuthentication(authToken);
+                        SecurityContextHolder.getContext()
+                                .setAuthentication(authToken);
+                    }
+                }
+
+            } catch (Exception e) {
+                // Token invalid, expired, malformed, etc.
+                System.out.println("JWT Invalid: " + e.getMessage());
             }
         }
 
         filterChain.doFilter(request, response);
     }
 }
-
-
