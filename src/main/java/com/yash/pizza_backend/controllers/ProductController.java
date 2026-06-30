@@ -15,10 +15,10 @@ public class ProductController {
     ProductService productService;
 
 
-    @GetMapping
-    public List<Product> getPizza(){
-        return productService.getPizza();
-    }
+    // @GetMapping
+    // public List<Product> getPizza(){
+    //     return productService.getPizza();
+    // }
 
     @PostMapping
     public void addPizza(@RequestBody Product product){
